@@ -1,25 +1,30 @@
 class Employee {
-    constructor(first, last, email, city, phone, street, dob, picture){
+    constructor(first, last, email, city, state, street, postcode, cell, dob, picture){
         this.first = first;
         this.last = last;
         this.email = email;
         this.city = city;
-        this.phone = phone;
+        this.state = state;
         this.street = street;
+        this.postcode = postcode;
+        this.cell = cell;
         this.dob = dob;
         this.picture = picture;
     }
     get fullName(){
         return this.first + ' ' + this.last;
     }
-    formatName(){
+    get detailedAddress(){
+        return this.street + ', ' + this.state + ' ' + this.postcode;
+    }
+    capitalize(){
         this.first = toTitleCase(this.first);
         this.last = toTitleCase(this.last);
-    }
-    formatCity(){
+        this.street = toTitleCase(this.street);
+        this.state = toTitleCase(this.state);
         this.city = toTitleCase(this.city);
     }
-    formatDob(){
+    formatDateOfBirth(){
         let currentDob = new Date(this.dob);
 
         let date = currentDob.getDate();
@@ -33,27 +38,27 @@ class Employee {
         // Formats to MM/DD/YY
         this.dob = date + "/" + month + "/" + year.toString().slice(2);
     }
-
 }
+
+/************************************************
+                    FETCH
+ ************************************************/
 const numOfEmployees = 12;
 const employees = [];
 
-/************************
-    FETCH FUNCTIONS
- ***********************/
+fetchData(`https://randomuser.me/api/?results=${numOfEmployees}&nat=us&inc=name,email,location,picture,cell,dob`)
+    .then(data => generateEmployees(data.results))
+    .then(() => formatEmployeeData())
+    .then(() => createDOMElements())
+    .then(() => setupEventListeners());
+
+
 function fetchData(url) {
     return fetch(url)
         .then(checkStatus)
         .then(res => res.json())
         .catch(error => console.log(error));
 }
-fetchData(`https://randomuser.me/api/?results=${numOfEmployees}&nat=us&inc=name,email,location,picture,phone,dob`)
-    .then(data => generateEmployees(data.results))
-    .then(() => formatEmployeeData())
-    .then(() => createDOMElements())
-    .then(() => addEmployeeToDOM())
-    .then(() => setupEventListeners());
-
 
 function checkStatus(response){
     if(response.ok){
@@ -70,26 +75,25 @@ function generateEmployees(results){
             result.name.last,
             result.email,
             result.location.city,
-            result.phone,
+            result.location.state,
             result.location.street,
+            result.location.postcode,
+            result.cell,
             result.dob.date,
             result.picture.large
         ));
     });
 }
-
-/************************
-     HELPER FUNCTIONS
- ***********************/
-
 function formatEmployeeData() {
     employees.forEach(employee => {
-        employee.formatName();
-        employee.formatDob();
-        employee.formatCity();
+        employee.capitalize();
+        employee.formatDateOfBirth();
     });
 }
 
+/************************************************
+                    HELPERS
+ ************************************************/
 // Returns first letter as Capitalized for each word
 function toTitleCase(str) {
     str = str.toLowerCase()
@@ -99,132 +103,111 @@ function toTitleCase(str) {
     return str;
 }
 
-/************************
-    DOM FUNCTIONS
- ***********************/
-const container = document.querySelector('.container');
-const ul = document.createElement('ul');
-const modal = document.querySelector('.modal');
-const modalContent = document.querySelector('.modal-content');
-
-
+/************************************************
+                        DOM
+ ************************************************/
 function createDOMElements() {
+    const container = document.querySelector('.container');
+    const ul = document.createElement('ul');
+
     container.appendChild(ul);
-    employees.forEach(() => {
+    for(let i = 0; i < employees.length; i++){
         let div = document.createElement('div');
         let li = document.createElement('li');
-        div.setAttribute('class', 'item-container');
+
+        div.setAttribute('class', 'employee-card');
+        div.setAttribute('data-index', [i]);
         li.appendChild(div);
         ul.appendChild(li);
-    });
+
+        addMarkup(i);
+        div.innerHTML = addMarkup(i);
+    }
 }
-function addEmployeeToDOM() {
-    const div = document.querySelectorAll('.item-container');
-    let img, name, email, city, phone, street, dob;
 
-    for (let i = 0; i < employees.length; i++) {
-        img = document.createElement('img');
-        name = document.createElement('h3');
-        email = document.createElement('a');
-        city = document.createElement('p');
-        phone = document.createElement('a');
-        street = document.createElement('a');
-        dob = document.createElement('p');
+function addMarkup(index) {
+        return `
+            <img src="${employees[index].picture}">
+            <h3 class="name">${employees[index].fullName}</h3>
+            <p class="email">${employees[index].email}</p>
+            <p class="city">${employees[index].city}</p>
+            <div class="detailed-info">
+                <hr />
+                <p class="detailed-address">${employees[index].detailedAddress}</p>
+                <p class="phone">${employees[index].cell}</p>
+                <p class="dob">Birthday:${employees[index].dob}</p>
+            </div>
+        `;
+}
 
-        img.setAttribute('src', employees[i].picture);
+function displayModal(index) {
+    const modal = document.querySelector('.modal');
+    const modalContent = document.querySelector('.modal-content');
 
-        name.setAttribute('class', 'name');
-        name.innerHTML = employees[i].fullName;
+    modalContent.innerHTML = addMarkup(index);
+    modal.style.display = 'block';
+}
 
-        email.setAttribute('class', 'email');
-        email.innerHTML = employees[i].email;
+/************************************************
+                     SEARCH
+ ************************************************/
+function filterEmployees(userInput) {
+    let listOfCards = document.querySelectorAll('ul li');
 
-        city.setAttribute('class', 'city');
-        city.innerHTML = employees[i].city;
-
-        div[i].append(img, name, email, city);
-
-        // Only display these in the Modal popup
-        const extraInfo = document.createElement('div');
-        extraInfo.setAttribute('class', 'extra-info');
-        extraInfo.style.display = 'none';
-
-        phone.setAttribute('class', 'phone');
-        phone.innerHTML = employees[i].phone;
-
-        street.setAttribute('class', 'street');
-        street.innerHTML = employees[i].street;
-
-        dob.setAttribute('class', 'dob');
-        dob.innerHTML = employees[i].dob;
-
-        extraInfo.append(phone, street, dob);
-
-        div[i].append(extraInfo);
+    for(let i = 0; i < listOfCards.length; i++){
+        if(employees[i].fullName.toLowerCase().includes(userInput)){
+            listOfCards[i].style.display ='block';
+        } else {
+            listOfCards[i].style.display ='none';
+        }
     }
 }
 
 
-function displayModal(content) {
-
-    modal.style.display = 'block';
-
-    // Inherit the html elements from the 'item-container' div
-    modalContent.innerHTML = content;
-
-    // Display the extra info when modal is active
-    modalContent.childNodes[4].style.display = 'block'; // 'extra-info' class
-
-    // Show the modal overlay
-    document.querySelector('.modal').style.display = 'block';
-}
-
-/************************
- EVENT LISTENERS
- ***********************/
-let clicked;
-let next;
-let previous;
-
+/************************************************
+                    EVENTS
+ ************************************************/
 function setupEventListeners(){
-    ul.addEventListener('click', (e) => {
-        if (e.target.tagName === 'DIV') {
-            clicked = e.target.innerHTML;
-            if(e.target.parentElement.nextSibling !== null){
-                next = e.target.parentElement.nextSibling.childNodes[0].innerHTML;
-            }
-            if(e.target.parentElement.previousSibling !== null){
-                previous = e.target.parentElement.previousSibling.childNodes[0].innerHTML;
-            }
+    let index;
+    let maxIndex = employees.length - 1;
+
+    document.querySelector('ul').addEventListener('click', (e) => {
+        if(e.target.tagName === 'DIV'){
+            index = e.target.dataset.index;
+            displayModal(index);
         } else if(
             e.target.tagName === 'IMG' ||
-            e.target.tagName === 'P' ||
-            e.target.tagName === 'H3') {
-            clicked = e.target.parentElement.innerHTML;
-                if(e.target.parentElement.parentElement.nextSibling !== null){
-                    next = e.target.parentElement.parentElement.nextSibling.childNodes[0].innerHTML;
-                }
-                if(e.target.parentElement.parentElement.previousSibling !== null){
-                    previous = e.target.parentElement.parentElement.previousSibling.childNodes[0].innerHTML;
-                }
+            e.target.tagName === 'H3' ||
+            e.target.tagName === 'P') {
+            index = e.target.parentElement.dataset.index;
+            displayModal(index);
         }
-        displayModal(clicked);
     });
 
-    // Modal Navigation
-    document.querySelector('.right-arrow').addEventListener('click',(e) => {
-        displayModal(next);
+    // Left/Right buttons wraps around
+    document.querySelector('.right-arrow').addEventListener('click', () => {
+        index++;
+        if(index > maxIndex){
+            index = 0;
+        }
+        displayModal(index);
     });
-
-    document.querySelector('.left-arrow').addEventListener('click',(e) => {
-        displayModal(previous);
+    document.querySelector('.left-arrow').addEventListener('click', () => {
+        index--;
+        if(index < 0){
+            index = maxIndex;
+        }
+        displayModal(index);
     });
-
 
     // Click anywhere outside of Modal content to close it
     window.addEventListener('click', e => {
         if(e.target === document.querySelector('.modal')) {
             e.target.style.display = 'none';
         }
+    });
+    document.querySelector('.search-field').addEventListener('keyup', (e) => {
+        let userInput = e.target.value.toLowerCase();
+        filterEmployees(userInput);
     });
 }

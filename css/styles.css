@@ -25,9 +25,14 @@ li {
     margin: 16px;
 }
 
-.item-container {
+
+.employee-card {
     border: 1px solid black;
     cursor: pointer;
+}
+
+.employee-card .detailed-info {
+    display: none;
 }
 
 img {
@@ -49,13 +54,20 @@ img {
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
 }
 
+/* The inner container is for the left/right arrow absoule positioning */
+.modal-inner {
+    position: relative;
+    background-color: transparent;
+    margin: 0 auto;
+    width: 30%;
+}
+
 .modal-content {
     background-color: #fefefe;
     text-align: center;
     margin: 0 auto;
     padding: 20px;
     border: 1px solid #888;
-    width: 30%;
 }
 
 /* Navigation Arrows */
