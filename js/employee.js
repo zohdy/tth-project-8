@@ -44,7 +44,7 @@ class Employee {
                     FETCH
  ************************************************/
 const numOfEmployees = 12;
-const app = [];
+const employee = [];
 
 fetchData(`https://randomuser.me/api/?results=${numOfEmployees}&nat=us&inc=name,email,location,picture,cell,dob`)
     .then(data => generateEmployees(data.results))
@@ -70,7 +70,7 @@ function checkStatus(response){
 
 function generateEmployees(results){
     results.forEach(result => {
-        app.push(new Employee(
+        employee.push(new Employee(
             result.name.first,
             result.name.last,
             result.email,
@@ -85,7 +85,7 @@ function generateEmployees(results){
     });
 }
 function formatEmployeeData() {
-    app.forEach(employee => {
+    employee.forEach(employee => {
         employee.capitalize();
         employee.formatDateOfBirth();
     });
@@ -108,7 +108,7 @@ function toTitleCase(str) {
  ************************************************/
 function createDOMElements() {
     const cardUl = document.querySelector('.employee-cards');
-    for(let i = 0; i < app.length; i++){
+    for(let i = 0; i < employee.length; i++){
         let li = document.createElement('li');
         let card = document.createElement('div');
         card.setAttribute('class', 'card-item');
@@ -123,16 +123,16 @@ function createDOMElements() {
 
 function addMarkup(index) {
         return `
-            <img src="${app[index].picture}">
+            <img src="${employee[index].picture}">
             <div class="info">
-                <p class="name info-text">${app[index].fullName}</p>
-                <p class="email info-text">${app[index].email}</p>
-                <p class="city info-text">${app[index].city}</p>
+                <p class="name info-text">${employee[index].fullName}</p>
+                <p class="email info-text">${employee[index].email}</p>
+                <p class="city info-text">${employee[index].city}</p>
             </div>
             <div class="detailed-info">
-                <p class="detailed-address">${app[index].detailedAddress}</p>
-                <p class="phone">${app[index].cell}</p>
-                <p class="dob">Birthday: ${app[index].dob}</p>
+                <p class="detailed-address">${employee[index].detailedAddress}</p>
+                <p class="phone">${employee[index].cell}</p>
+                <p class="dob">Birthday: ${employee[index].dob}</p>
             </div>
         `;
 }
@@ -152,7 +152,7 @@ function filterEmployees(userInput) {
     let cardList = document.querySelectorAll('.employee-cards li');
 
     for(let i = 0; i < cardList.length; i++){
-        if(app[i].fullName.toLowerCase().includes(userInput)){
+        if(employee[i].fullName.toLowerCase().includes(userInput)){
             cardList[i].style.display ='block';
         } else {
             cardList[i].style.display ='none';
