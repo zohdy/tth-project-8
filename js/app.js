@@ -44,7 +44,7 @@ class Employee {
                     FETCH
  ************************************************/
 const numOfEmployees = 12;
-const employees = [];
+const app = [];
 
 fetchData(`https://randomuser.me/api/?results=${numOfEmployees}&nat=us&inc=name,email,location,picture,cell,dob`)
     .then(data => generateEmployees(data.results))
@@ -70,7 +70,7 @@ function checkStatus(response){
 
 function generateEmployees(results){
     results.forEach(result => {
-        employees.push(new Employee(
+        app.push(new Employee(
             result.name.first,
             result.name.last,
             result.email,
@@ -85,7 +85,7 @@ function generateEmployees(results){
     });
 }
 function formatEmployeeData() {
-    employees.forEach(employee => {
+    app.forEach(employee => {
         employee.capitalize();
         employee.formatDateOfBirth();
     });
@@ -107,35 +107,32 @@ function toTitleCase(str) {
                         DOM
  ************************************************/
 function createDOMElements() {
-    const container = document.querySelector('.container');
-    const ul = document.createElement('ul');
-
-    container.appendChild(ul);
-    for(let i = 0; i < employees.length; i++){
-        let div = document.createElement('div');
+    const cardUl = document.querySelector('.employee-cards');
+    for(let i = 0; i < app.length; i++){
         let li = document.createElement('li');
-
-        div.setAttribute('class', 'employee-card');
-        div.setAttribute('data-index', [i]);
-        li.appendChild(div);
-        ul.appendChild(li);
+        let card = document.createElement('div');
+        card.setAttribute('class', 'card-item');
+        card.setAttribute('data-index', [i]);
+        li.appendChild(card);
+        cardUl.appendChild(li);
 
         addMarkup(i);
-        div.innerHTML = addMarkup(i);
+        card.innerHTML = addMarkup(i);
     }
 }
 
 function addMarkup(index) {
         return `
-            <img src="${employees[index].picture}">
-            <h3 class="name">${employees[index].fullName}</h3>
-            <p class="email">${employees[index].email}</p>
-            <p class="city">${employees[index].city}</p>
+            <img src="${app[index].picture}">
+            <div class="info">
+                <p class="name info-text">${app[index].fullName}</p>
+                <p class="email info-text">${app[index].email}</p>
+                <p class="city info-text">${app[index].city}</p>
+            </div>
             <div class="detailed-info">
-                <hr />
-                <p class="detailed-address">${employees[index].detailedAddress}</p>
-                <p class="phone">${employees[index].cell}</p>
-                <p class="dob">Birthday:${employees[index].dob}</p>
+                <p class="detailed-address">${app[index].detailedAddress}</p>
+                <p class="phone">${app[index].cell}</p>
+                <p class="dob">Birthday: ${app[index].dob}</p>
             </div>
         `;
 }
@@ -152,13 +149,13 @@ function displayModal(index) {
                      SEARCH
  ************************************************/
 function filterEmployees(userInput) {
-    let listOfCards = document.querySelectorAll('ul li');
+    let cardList = document.querySelectorAll('.employee-cards li');
 
-    for(let i = 0; i < listOfCards.length; i++){
-        if(employees[i].fullName.toLowerCase().includes(userInput)){
-            listOfCards[i].style.display ='block';
+    for(let i = 0; i < cardList.length; i++){
+        if(app[i].fullName.toLowerCase().includes(userInput)){
+            cardList[i].style.display ='block';
         } else {
-            listOfCards[i].style.display ='none';
+            cardList[i].style.display ='none';
         }
     }
 }
@@ -169,17 +166,19 @@ function filterEmployees(userInput) {
  ************************************************/
 function setupEventListeners(){
     let index;
-    let maxIndex = employees.length - 1;
+    let maxIndex = document.querySelectorAll('.card-item').length - 1;
 
-    document.querySelector('ul').addEventListener('click', (e) => {
-        if(e.target.tagName === 'DIV'){
+    // TODO Find to make the LI itself clickable and ignore its nested elements
+    document.querySelector('.employee-cards').addEventListener('click', (e) => {
+        console.log(e.target);
+        if(e.target.className === 'card-item') {
             index = e.target.dataset.index;
             displayModal(index);
-        } else if(
-            e.target.tagName === 'IMG' ||
-            e.target.tagName === 'H3' ||
-            e.target.tagName === 'P') {
+        } else if (e.target.tagName === 'IMG' || e.target.className === 'info') {
             index = e.target.parentElement.dataset.index;
+            displayModal(index);
+        } else if (e.target.classList.contains('info-text')) {
+            index = e.target.parentElement.parentElement.dataset.index;
             displayModal(index);
         }
     });
